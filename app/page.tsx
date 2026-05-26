@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
+import Confetti from "react-confetti";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function Home() {
   const [bloques, setBloques] = useState<any[]>([]);
@@ -30,6 +36,23 @@ export default function Home() {
   const [busqueda, setBusqueda] = useState("");
 
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [mostrarConfetti, setMostrarConfetti] = useState(false);
+  const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<number | null>(null);
+  const [seccionActiva, setSeccionActiva] =
+  useState("inicio");
+  const [darkMode, setDarkMode] = useState(false);
+  const [mostrarResultado, setMostrarResultado] =
+  useState(false);
+  const datosGrafico = [
+  { value: 20 },
+  { value: 45 },
+  { value: 35 },
+  { value: 60 },
+  { value: 55 },
+  { value: 80 },
+  { value: 72 },
+  { value: 95 },
+];
 
   useEffect(() => {
 
@@ -38,6 +61,15 @@ export default function Home() {
   obtenerTodasPreguntas();
 
 }, []);
+useEffect(() => {
+
+  if (darkMode) {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
+
+}, [darkMode]);
 
   async function obtenerBloques() {
     const { data } = await supabase
@@ -179,6 +211,7 @@ setTimeout(() => {
     const actual = preguntas[indicePregunta];
 
     if (!actual) return;
+    setRespuestaSeleccionada(opcion);
 
     if (opcion === actual.correcta) {
       setAciertos((prev) => prev + 1);
@@ -192,32 +225,112 @@ setTimeout(() => {
       setFeedback("");
     }, 1000);
 
-    const siguiente = indicePregunta + 1;
+  setTimeout(() => {
 
-    if (siguiente < preguntas.length) {
-      setIndicePregunta(siguiente);
-    } else {
-      alert("🎉 Test terminado");
-      setModoTest(false);
-    }
+  const siguiente = indicePregunta + 1;
+
+  if (siguiente < preguntas.length) {
+
+    setIndicePregunta(siguiente);
+
+    setRespuestaSeleccionada(null);
+
+  } else {
+
+  setMostrarConfetti(true);
+
+  setTimeout(() => {
+    setMostrarConfetti(false);
+  }, 5000);
+
+  setRespuestaSeleccionada(null);
+
+  setMostrarResultado(true);
+
+}
+
+}, 1200);
+
+}
+  if (modoTest) {
+
+  const preguntaActual = preguntas[indicePregunta];
+
+  const progreso =
+    ((indicePregunta + 1) / preguntas.length) * 100;
+
+  if (!preguntaActual && !mostrarResultado) {
+    return (
+      <main className="min-h-screen animate-fade flex items-center justify-center">
+        <h1 className="text-4xl font-black">
+          No hay preguntas
+        </h1>
+        
+      </main>
+    );
   }
 
-  if (modoTest) {
-    const preguntaActual = preguntas[indicePregunta];
-const progreso =
-  ((indicePregunta + 1) / preguntas.length) * 100;
-    if (!preguntaActual) {
-      return (
-        <main className="min-h-screen flex items-center justify-center">
-          <h1 className="text-4xl font-black">
-            No hay preguntas
-          </h1>
-        </main>
-      );
-    }
+  return (
+    <>
+  {mostrarConfetti && <Confetti />}
+  {mostrarResultado && (
 
-    return (
-    <main className="min-h-screen bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+
+    <div className="w-full max-w-md rounded-[32px] bg-white dark:bg-zinc-900 p-10 shadow-[0_20px_80px_rgba(0,0,0,0.25)] animate-fade">
+
+      <h2 className="text-4xl font-black mb-6 text-center">
+        🎉 Test finalizado
+      </h2>
+
+      <div className="space-y-4 text-xl font-bold">
+
+        <div className="flex justify-between">
+          <span>✅ Aciertos</span>
+          <span>{aciertos}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>❌ Fallos</span>
+          <span>{fallos}</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>📈 Resultado</span>
+          <span>
+            {aciertos + fallos > 0
+              ? Math.round(
+                  (aciertos /
+                    (aciertos + fallos)) *
+                    100
+                )
+              : 0}
+            %
+          </span>
+        </div>
+
+      </div>
+
+      <button
+        onClick={() => {
+
+          setMostrarResultado(false);
+
+          setModoTest(false);
+
+        }}
+        className="mt-10 w-full rounded-2xl bg-black py-4 text-white font-bold hover:scale-[1.02] transition-all"
+      >
+        🚀 Continuar
+      </button>
+
+    </div>
+
+  </div>
+
+)}
+
+      <main className="min-h-screen animate-fade bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => setModoTest(false)}
@@ -285,43 +398,68 @@ const progreso =
 </div>
 
             <div className="grid gap-4">
-              <button
-                onClick={() => responder(0)}
-                className="rounded-2xl border p-5 text-left hover:bg-gray-100"
-              >
-                A) {preguntaActual.opcion_a}
-              </button>
 
-              <button
-                onClick={() => responder(1)}
-                className="rounded-2xl border p-5 text-left hover:bg-gray-100"
-              >
-                B) {preguntaActual.opcion_b}
-              </button>
+  {[
+    preguntaActual.opcion_a,
+    preguntaActual.opcion_b,
+    preguntaActual.opcion_c,
+    preguntaActual.opcion_d,
+  ].map((opcion, index) => (
 
-              <button
-                onClick={() => responder(2)}
-                className="rounded-2xl border p-5 text-left hover:bg-gray-100"
-              >
-                C) {preguntaActual.opcion_c}
-              </button>
+    <button
+      key={index}
+      onClick={() => responder(index)}
+      className={`
+        rounded-2xl p-5 text-left font-bold transition-all duration-300 shadow-lg hover:scale-[1.02]
 
-              <button
-                onClick={() => responder(3)}
-                className="rounded-2xl border p-5 text-left hover:bg-gray-100"
-              >
-                D) {preguntaActual.opcion_d}
-              </button>
-            </div>
+        ${
+          respuestaSeleccionada === index &&
+          preguntaActual.correcta === index
+            ? "bg-green-500 text-white shadow-green-500/50"
+            : ""
+        }
+
+        ${
+          respuestaSeleccionada === index &&
+          preguntaActual.correcta !== index
+            ? "bg-red-500 text-white shadow-red-500/50"
+            : ""
+        }
+
+        ${
+  respuestaSeleccionada !== null &&
+  respuestaSeleccionada !== index &&
+  preguntaActual.correcta === index
+    ? "bg-green-500/80 text-white"
+    : ""
+}
+
+        ${
+          respuestaSeleccionada === null
+            ? "bg-white/70 dark:bg-zinc-900/70 border border-white/50"
+            : ""
+        }
+      `}
+    >
+      {["A", "B", "C", "D"][index]}) {opcion}
+    </button>
+
+  ))}
+
+</div>
           </div>
         </div>
       </main>
-    );
-  }
 
-  if (verBaseDatos) {
-    return (
-      <main className="min-h-screen bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
+    </>
+
+  );
+
+}
+
+  
+   if (verBaseDatos) { return (
+      <main className="min-h-screen animate-fade bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
         <div className="max-w-5xl mx-auto">
           <button
             onClick={() => setVerBaseDatos(false)}
@@ -331,8 +469,7 @@ const progreso =
           </button>
 
           <div className="rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-10 shadow-xl">
-            <h1 className="text-5xl font-black mb-10">
-              {toast && (
+            {toast && (
 
   <div className="mb-6 rounded-2xl bg-black text-white px-6 py-4 font-bold shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-fade">
 
@@ -341,30 +478,32 @@ const progreso =
   </div>
 
 )}
-              🗄️ Base de datos
-            </h1>
 
-            <select
+<h1 className="text-5xl font-black mb-10">
+  🗄️ Base de datos
+</h1>
+
+  <select
   value={bloqueSeleccionado?.NOMBRE || ""}
   onChange={async (e) => {
 
-  const bloque = {
-    NOMBRE: e.target.value,
-  };
+    const bloque = {
+      NOMBRE: e.target.value,
+    };
 
-  setBloqueSeleccionado(bloque);
+    setBloqueSeleccionado(bloque);
 
-  const { data } = await supabase
-  .from("PREGUNTAS")
-  .select();
+    const { data } = await supabase
+      .from("PREGUNTAS")
+      .select();
 
-  if (data) {
-    setPreguntas(data);
-  }
+    if (data) {
+      setPreguntas(data);
+    }
 
-}}
-              className="w-full rounded-2xl border p-5 mb-6"
-            >
+  }}
+  className="w-full rounded-2xl border p-5 mb-6"
+>
               <option value="">Selecciona bloque</option>
 
               {bloques.map((bloque) => (
@@ -463,20 +602,18 @@ const progreso =
 
             <div className="grid gap-5">
               {preguntas
-                .filter((p) => {
+  .filter((p) => {
+    const coincideBusqueda =
+      p.pregunta
+        ?.toLowerCase()
+        .includes(busqueda.toLowerCase());
 
-  const coincideBusqueda =
-    p.pregunta
-      ?.toLowerCase()
-      .includes(busqueda.toLowerCase());
+    const coincideBloque =
+      !bloqueSeleccionado ||
+      p.BLOQUE === bloqueSeleccionado.NOMBRE;
 
-  const coincideBloque =
-    !bloqueSeleccionado ||
-    p.BLOQUE === bloqueSeleccionado.NOMBRE;
-
-  return coincideBusqueda && coincideBloque;
-
-})
+    return coincideBusqueda && coincideBloque;
+  })
                 .map((p, index) => (
                   <div
                     key={p.id}
@@ -527,77 +664,423 @@ const progreso =
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-7xl font-black mb-12">
-          📚 Test Oposiciones
-        </h1>
+    <main className="min-h-screen animate-fade bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
+      <div className="flex gap-8">
+
+  <aside className="w-72 shrink-0 rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)] h-[calc(100vh-80px)] sticky top-10">
+
+    <div className="mb-10">
+
+      <h2 className="text-3xl font-black mb-2">
+        ⚖️ Justicia
+      </h2>
+
+      <p className="text-zinc-500 dark:text-zinc-400">
+        Plataforma de oposiciones
+      </p>
+
+    </div>
+
+    <div className="space-y-3">
+
+      <button
+  onClick={() => setSeccionActiva("inicio")}
+  className={`w-full rounded-2xl px-5 py-4 text-left font-bold transition-all
+
+    ${
+      seccionActiva === "inicio"
+        ? "bg-black text-white"
+        : "hover:bg-black/5 dark:hover:bg-white/5"
+    }
+  `}
+>
+  🏠 Inicio
+</button>
+
+      <button
+  onClick={() => {
+
+    setSeccionActiva("bd");
+
+    setVerBaseDatos(true);
+
+  }}
+        className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+      >
+        🗄️ Base de datos
+      </button>
+
+      <button
+        className={`w-full rounded-2xl px-5 py-4 text-left font-bold transition-all
+
+  ${
+    seccionActiva === "bd"
+      ? "bg-black text-white"
+      : "hover:bg-black/5 dark:hover:bg-white/5"
+  }
+`}
+      >
+        ❌ Fallos
+      </button>
+
+      <button
+        className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+      >
+        📊 Estadísticas
+      </button>
+
+    </div>
+
+  </aside>
+
+  <div className="flex-1">
+
+        <div className="flex justify-end mb-6">
+
+  <button
+    onClick={() => setDarkMode(!darkMode)}
+    className="rounded-full bg-black text-white px-4 py-2 text-sm font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+  >
+    {darkMode ? "☀️" : "🌙"}
+  </button>
+
+</div>
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex justify-end mb-10">
+
+  <div className="relative w-[380px]">
+
+    <input
+      type="text"
+      placeholder="Buscar..."
+      className="w-full rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 pl-14 pr-6 py-4 text-lg shadow-[0_20px_60px_rgba(0,0,0,0.12)] outline-none focus:scale-[1.02] transition-all duration-300"
+    />
+
+    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400">
+      🔎
+    </div>
+
+  </div>
+
+</div>
+
+  <div>
+
+    <p className="text-zinc-500 dark:text-zinc-400 font-medium mb-2">
+      Plataforma de estudio
+    </p>
+
+    <h2 className="text-3xl font-black">
+      Bienvenida 👋
+    </h2>
+
+  </div>
+
+  <div className="flex items-center gap-4">
+
+    <div className="rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 px-5 py-3 shadow-lg">
+      <p className="font-bold">
+        ⚡ Premium
+      </p>
+    </div>
+
+  </div>
+
+</div>
+<div className="grid md:grid-cols-3 gap-6 mb-12">
+
+  <div className="rounded-[28px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+
+    <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-3">
+      📚 Preguntas
+    </p>
+
+    <h3 className="text-5xl font-black">
+      {preguntas.length}
+    </h3>
+
+  </div>
+
+  <div className="rounded-[28px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+
+    <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-3">
+      🔥 Ratio
+    </p>
+
+    <h3 className="text-5xl font-black">
+      {aciertos + fallos > 0
+        ? Math.round(
+            (aciertos /
+              (aciertos + fallos)) *
+              100
+          )
+        : 0}
+      %
+    </h3>
+
+  </div>
+
+  <div className="rounded-[28px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
+
+    <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-3">
+      ⚡ Tests
+    </p>
+
+    <h3 className="text-5xl font-black">
+      {aciertos + fallos}
+    </h3>
+
+  </div>
+
+</div>
+<div className="rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] mb-14">
+
+  <div className="flex items-center justify-between mb-8">
+
+    <div>
+
+      <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-2">
+        Rendimiento
+      </p>
+
+      <h2 className="text-4xl font-black">
+        Evolución semanal
+      </h2>
+
+    </div>
+
+    <div className="rounded-2xl bg-green-500/10 border border-green-500/20 px-5 py-3">
+
+      <p className="font-bold text-green-600">
+        ↗ +12%
+      </p>
+
+    </div>
+
+  </div>
+
+  <div className="h-[260px]">
+
+    <ResponsiveContainer width="100%" height="100%">
+
+      <LineChart data={datosGrafico}>
+
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#3b82f6"
+          strokeWidth={5}
+          dot={false}
+        />
+
+      </LineChart>
+
+    </ResponsiveContainer>
+
+  </div>
+
+</div>
+<div className="rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] mb-14">
+
+  <div className="flex items-center justify-between mb-8">
+
+    <div>
+
+      <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-2">
+        Rendimiento
+      </p>
+
+      <h2 className="text-4xl font-black">
+        Evolución semanal
+      </h2>
+
+    </div>
+
+    <div className="rounded-2xl bg-green-500/10 border border-green-500/20 px-5 py-3">
+
+      <p className="font-bold text-green-600">
+        ↗ +12%
+      </p>
+
+    </div>
+
+  </div>
+
+  <div className="h-[260px]">
+
+    <ResponsiveContainer width="100%" height="100%">
+
+      <LineChart data={datosGrafico}>
+
+        <Line
+          type="monotone"
+          dataKey="value"
+          stroke="#3b82f6"
+          strokeWidth={5}
+          dot={false}
+        />
+
+      </LineChart>
+
+    </ResponsiveContainer>
+
+  </div>
+
+</div>
+<div className="mb-16">
+
+  <h1 className="text-7xl md:text-8xl font-black leading-none mb-6 bg-gradient-to-r from-black to-zinc-500 dark:from-white dark:to-zinc-500 bg-clip-text text-transparent">
+
+    Oposiciones
+    <br />
+    Justicia
+
+
+  </h1>
+
+  <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+
+
+    Practica test oficiales, simulacros y seguimiento de progreso
+    en una plataforma moderna diseñada para opositores.
+
+  </p>
+
+</div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-10">
 
           <div
-            onClick={() => setVerBaseDatos(true)}
-            className="rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-xl cursor-pointer"
-          >
-            <h2 className="text-3xl font-black mb-3">
-              🗄️ Base de datos
-            </h2>
+  onClick={() => setVerBaseDatos(true)}
+  className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] cursor-pointer hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500"
+>
 
-            <p>Gestiona preguntas.</p>
-          </div>
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/10 group-hover:to-cyan-500/20 transition-all duration-500" />
+
+  <div className="relative z-10">
+
+    <div className="text-6xl mb-6">
+      🗄️
+    </div>
+
+    <h2 className="text-3xl font-black mb-3">
+      Base de datos
+    </h2>
+
+    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+      Gestiona preguntas, edita contenido y administra bloques.
+    </p>
+
+  </div>
+
+</div>
 
           <div
-            className="rounded-3xl bg-red-100 p-8 shadow-xl"
-          >
-            <h2 className="text-3xl font-black mb-3">
-              ❌ Fallos
-            </h2>
+  className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500"
+>
 
-            <p className="mb-6">
-              Preguntas incorrectas.
-            </p>
+  <div className="absolute inset-0 bg-gradient-to-br from-red-500/0 to-pink-500/0 group-hover:from-red-500/10 group-hover:to-pink-500/20 transition-all duration-500" />
 
-            <button
-              onClick={async () => {
-                const { data } = await supabase
-                  .from("FALLOS")
-                  .select("*");
+  <div className="relative z-10">
 
-                if (data) {
-                  setPreguntas(data);
-                  setBloqueSeleccionado({
-                    NOMBRE: "FALLOS",
-                  });
-                  setModoTest(true);
-                }
-              }}
-              className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold"
-            >
-              ▶️ Practicar fallos
-            </button>
-          </div>
+    <div className="text-6xl mb-6">
+      ❌
+    </div>
 
-          <div className="rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-xl">
-            <h2 className="text-3xl font-black mb-3">
-              📊 Estadísticas
-            </h2>
+    <h2 className="text-3xl font-black mb-3">
+      Fallos
+    </h2>
 
-            <div className="space-y-3 text-lg">
-              <p>✅ Aciertos: {aciertos}</p>
-              <p>❌ Fallos: {fallos}</p>
+    <p className="mb-8 text-zinc-600 dark:text-zinc-400 leading-relaxed">
+      Practica únicamente las preguntas falladas para reforzar memoria.
+    </p>
 
-              <p>
-                📈 Porcentaje:{" "}
-                {aciertos + fallos > 0
-                  ? Math.round(
-                      (aciertos /
-                        (aciertos + fallos)) *
-                        100
-                    )
-                  : 0}
-                %
-              </p>
-            </div>
+    <button
+      onClick={async () => {
+        const { data } = await supabase
+          .from("FALLOS")
+          .select("*");
+
+        if (data) {
+          setPreguntas(data);
+          setBloqueSeleccionado({
+            NOMBRE: "FALLOS",
+          });
+          setModoTest(true);
+        }
+      }}
+      className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+    >
+      ▶️ Practicar fallos
+    </button>
+
+  </div>
+
+</div>
+
+          <div className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500">
+
+  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-violet-500/0 group-hover:from-blue-500/10 group-hover:to-violet-500/20 transition-all duration-500" />
+
+  <div className="relative z-10">
+
+    <div className="text-6xl mb-6">
+      📊
+    </div>
+
+    <h2 className="text-3xl font-black mb-8">
+      Estadísticas
+    </h2>
+
+    <div className="grid grid-cols-3 gap-4">
+
+      <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-4 text-center">
+
+        <p className="text-sm font-bold mb-2 text-zinc-500">
+          Aciertos
+        </p>
+
+        <p className="text-3xl font-black">
+          {aciertos}
+        </p>
+
+      </div>
+
+      <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-4 text-center">
+
+        <p className="text-sm font-bold mb-2 text-zinc-500">
+          Fallos
+        </p>
+
+        <p className="text-3xl font-black">
+          {fallos}
+        </p>
+
+      </div>
+
+      <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-4 text-center">
+
+        <p className="text-sm font-bold mb-2 text-zinc-500">
+          Ratio
+        </p>
+
+        <p className="text-3xl font-black">
+          {aciertos + fallos > 0
+            ? Math.round(
+                (aciertos /
+                  (aciertos + fallos)) *
+                  100
+              )
+            : 0}
+          %
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
           </div>
 
         </div>
@@ -651,40 +1134,61 @@ const progreso =
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bloques.map((bloque) => (
             <div
-              key={bloque.NOMBRE}
-              className="rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50/70 backdrop-blur-xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-white/50 hover:scale-[1.03] hover:-translate-y-2 hover:-translate-y-1 transition-all duration-300"
-            >
-              <h2
-                onClick={() => setBloqueSeleccionado(bloque)}
-                className="text-2xl font-black mb-6 cursor-pointer"
-              >
-                📘 {bloque.NOMBRE}
-              </h2>
+  key={bloque.NOMBRE}
+  className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500"
+>
 
-              <button
-                onClick={async () => {
-                  setBloqueSeleccionado(bloque);
+  <div className="absolute inset-0 bg-gradient-to-br from-zinc-500/0 to-black/0 group-hover:from-zinc-500/5 group-hover:to-black/10 transition-all duration-500" />
 
-                  const { data } = await supabase
-                    .from("PREGUNTAS")
-                    .select("*")
-                    .eq("BLOQUE", bloque.NOMBRE);
+  <div className="relative z-10">
 
-                  if (data) {
-                    setPreguntas(data);
-                  }
+    <div className="text-6xl mb-6">
+      📘
+    </div>
 
-                  setModoTest(true);
-                }}
-                className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold"
-              >
-                ▶️ Empezar test
-              </button>
-            </div>
+    <h2
+      onClick={() => setBloqueSeleccionado(bloque)}
+      className="text-3xl font-black mb-4 cursor-pointer"
+    >
+      {bloque.NOMBRE}
+    </h2>
+
+    <p className="text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed">
+      Practica preguntas oficiales y mejora tu rendimiento.
+    </p>
+
+    <button
+      onClick={async () => {
+
+        setBloqueSeleccionado(bloque);
+
+        const { data } = await supabase
+          .from("PREGUNTAS")
+          .select("*")
+          .eq("BLOQUE", bloque.NOMBRE);
+
+        if (data) {
+          setPreguntas(data);
+        }
+
+        setModoTest(true);
+
+      }}
+      className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+    >
+      ▶️ Empezar test
+    </button>
+
+  </div>
+
+</div>
           ))}
-        </div>
-      </div>
-    </main>
+              </div>
+    </div>
+
+  </div>
+
+</main>
   );
 }
 
