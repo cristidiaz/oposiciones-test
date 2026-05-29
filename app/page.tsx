@@ -21,6 +21,7 @@ export default function Home() {
   const [opcionC, setOpcionC] = useState("");
   const [opcionD, setOpcionD] = useState("");
   const [correcta, setCorrecta] = useState("0");
+  const [oficial, setOficial] = useState(false);
 
   const [modoTest, setModoTest] = useState(false);
   const [indicePregunta, setIndicePregunta] = useState(0);
@@ -119,6 +120,7 @@ const { error } = await supabase
         opcion_c: opcionC,
         opcion_d: opcionD,
         correcta: parseInt(correcta),
+OFICIAL: oficial,
       },
     ]);
 
@@ -150,6 +152,7 @@ setTimeout(() => {
       opcion_c: opcionC,
       opcion_d: opcionD,
       correcta: parseInt(correcta),
+OFICIAL: oficial,
     })
     .eq("id", editandoId);
 
@@ -198,6 +201,7 @@ setTimeout(() => {
     setOpcionC("");
     setOpcionD("");
     setCorrecta("0");
+    setOficial(false);
   }
 
   async function empezarTest() {
@@ -393,6 +397,19 @@ setTimeout(() => {
 
   <h2 className="text-3xl font-black mb-10">
     {preguntaActual.pregunta}
+    {preguntaActual.OFICIAL && (
+
+  <div className="inline-flex items-center gap-2 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 px-4 py-2 mt-4">
+
+    <span>🏛️</span>
+
+    <span className="font-bold text-yellow-600">
+      Pregunta oficial
+    </span>
+
+  </div>
+
+)}
   </h2>
 
 </div>
@@ -515,6 +532,22 @@ setTimeout(() => {
                 </option>
               ))}
             </select>
+            <div className="flex items-center gap-3">
+
+  <input
+    type="checkbox"
+    checked={oficial}
+    onChange={(e) =>
+      setOficial(e.target.checked)
+    }
+    className="w-5 h-5"
+  />
+
+  <p className="font-bold">
+    🏛️ Pregunta oficial
+  </p>
+
+</div>
 
             <input
               type="text"
@@ -640,6 +673,7 @@ setTimeout(() => {
   setOpcionD(p.opcion_d);
 
   setCorrecta(String(p.correcta));
+  setOficial(p.OFICIAL || false);
 
 }}
                         className="rounded-2xl bg-blue-500 px-5 py-3 text-white font-bold shadow-lg hover:scale-105 active:scale-95 active:translate-y-[2px] transition-all duration-150"
@@ -859,56 +893,9 @@ setTimeout(() => {
 
   </div>
 
-  <div className="h-[260px]">
+  <div className="h-[260px] w-full min-w-0">
 
-    <ResponsiveContainer width="100%" height="100%">
-
-      <LineChart data={datosGrafico}>
-
-        <Line
-          type="monotone"
-          dataKey="value"
-          stroke="#3b82f6"
-          strokeWidth={5}
-          dot={false}
-        />
-
-      </LineChart>
-
-    </ResponsiveContainer>
-
-  </div>
-
-</div>
-<div className="rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] mb-14">
-
-  <div className="flex items-center justify-between mb-8">
-
-    <div>
-
-      <p className="text-zinc-500 dark:text-zinc-400 font-bold mb-2">
-        Rendimiento
-      </p>
-
-      <h2 className="text-4xl font-black">
-        Evolución semanal
-      </h2>
-
-    </div>
-
-    <div className="rounded-2xl bg-green-500/10 border border-green-500/20 px-5 py-3">
-
-      <p className="font-bold text-green-600">
-        ↗ +12%
-      </p>
-
-    </div>
-
-  </div>
-
-  <div className="h-[260px]">
-
-    <ResponsiveContainer width="100%" height="100%">
+    <ResponsiveContainer width="99%" height={260}>
 
       <LineChart data={datosGrafico}>
 
@@ -927,6 +914,7 @@ setTimeout(() => {
   </div>
 
 </div>
+
 <div className="mb-16">
 
   <h1 className="text-7xl md:text-8xl font-black leading-none mb-6 bg-gradient-to-r from-black to-zinc-500 dark:from-white dark:to-zinc-500 bg-clip-text text-transparent">
