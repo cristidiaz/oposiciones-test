@@ -22,6 +22,8 @@ export default function Home() {
   const [opcionD, setOpcionD] = useState("");
   const [correcta, setCorrecta] = useState("0");
   const [oficial, setOficial] = useState(false);
+  const [preguntasSeleccionadas, setPreguntasSeleccionadas] =
+  useState<number[]>([]);
 
   const [modoTest, setModoTest] = useState(false);
   const [indicePregunta, setIndicePregunta] = useState(0);
@@ -146,6 +148,7 @@ setTimeout(() => {
   const { error } = await supabase
     .from("PREGUNTAS")
     .update({
+      BLOQUE: bloqueSeleccionado.NOMBRE,
       pregunta,
       opcion_a: opcionA,
       opcion_b: opcionB,
@@ -559,6 +562,24 @@ setTimeout(() => {
 
             {bloqueSeleccionado && (
               <div className="grid gap-4 mb-10">
+                <select
+  value={bloqueSeleccionado?.NOMBRE || ""}
+  onChange={(e) =>
+    setBloqueSeleccionado({
+      NOMBRE: e.target.value,
+    })
+  }
+  className="rounded-2xl border p-5"
+>
+  {bloques.map((bloque) => (
+    <option
+      key={bloque.NOMBRE}
+      value={bloque.NOMBRE}
+    >
+      {bloque.NOMBRE}
+    </option>
+  ))}
+</select>
                 <input
                   type="text"
                   placeholder="Pregunta"
@@ -632,7 +653,56 @@ setTimeout(() => {
                 </button>
               </div>
             )}
+<div className="flex gap-4 mb-6">
 
+  <select
+    id="bloqueDestino"
+    className="rounded-2xl border p-4"
+  >
+    {bloques.map((bloque) => (
+
+      <option
+        key={bloque.NOMBRE}
+        value={bloque.NOMBRE}
+      >
+        {bloque.NOMBRE}
+      </option>
+
+    ))}
+  </select>
+
+  <button
+    onClick={async () => {
+
+      const select =
+        document.getElementById(
+          "bloqueDestino"
+        ) as HTMLSelectElement;
+
+      const destino = select.value;
+
+      await supabase
+        .from("PREGUNTAS")
+        .update({
+          BLOQUE: destino,
+        })
+        .in("id", preguntasSeleccionadas);
+
+      obtenerPreguntas();
+
+      setPreguntasSeleccionadas([]);
+
+      setToast(
+        "🚚 Preguntas movidas"
+      );
+
+    }}
+    className="rounded-2xl bg-black px-6 py-4 text-white font-bold"
+  >
+    🚚 Mover seleccionadas
+  </button>
+
+</div>
             <div className="grid gap-5">
               {preguntas
   .filter((p) => {
@@ -652,15 +722,48 @@ setTimeout(() => {
                     key={p.id}
                     className="rounded-[28px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50/80 backdrop-blur-xl border border-white/50 p-6 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:scale-[1.01] transition-all duration-300"
                   >
-                    <h3 className="text-xl font-bold mb-4">
-                      {p.pregunta}
-                    </h3>
+                    <div className="flex items-start gap-4 mb-4">
+
+  <input
+    type="checkbox"
+    checked={preguntasSeleccionadas.includes(p.id)}
+    onChange={(e) => {
+
+      if (e.target.checked) {
+
+        setPreguntasSeleccionadas([
+          ...preguntasSeleccionadas,
+          p.id,
+        ]);
+
+      } else {
+
+        setPreguntasSeleccionadas(
+          preguntasSeleccionadas.filter(
+            (id) => id !== p.id
+          )
+        );
+
+      }
+
+    }}
+    className="mt-1 w-5 h-5"
+  />
+
+  <h3 className="text-xl font-bold">
+    {p.pregunta}
+  </h3>
+
+</div>
 
                     <div className="flex gap-4">
                       <button
                         onClick={() => {
 
   setEditandoId(p.id);
+  setBloqueSeleccionado({
+  NOMBRE: p.BLOQUE,
+});
 
   setPregunta(p.pregunta);
 
