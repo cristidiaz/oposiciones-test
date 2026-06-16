@@ -43,6 +43,8 @@ export default function Home() {
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<number | null>(null);
   const [seccionActiva, setSeccionActiva] =
   useState("inicio");
+  const [ejercicioSeleccionado, setEjercicioSeleccionado] =
+  useState("");
   const [darkMode, setDarkMode] = useState(false);
   const [mostrarResultado, setMostrarResultado] =
   useState(false);
@@ -89,7 +91,8 @@ useEffect(() => {
 
     const { data } = await supabase
       .from("PREGUNTAS")
-      .select("*")
+.select("*")
+.range(0, 5000)
       .eq("BLOQUE", bloqueSeleccionado.NOMBRE);
 
     if (data) {
@@ -100,11 +103,12 @@ async function obtenerTodasPreguntas() {
 
   const { data } = await supabase
     .from("PREGUNTAS")
-    .select("*");
+.select("*")
+.range(0, 5000)
 
   if (data) {
-    setPreguntas(data);
-  }
+  setPreguntas(data);
+}
 
 }
   async function guardarPregunta() {
@@ -163,7 +167,8 @@ OFICIAL: oficial,
 
     const { data } = await supabase
       .from("PREGUNTAS")
-      .select("*")
+.select("*")
+.range(0, 5000)
       .eq("BLOQUE", bloqueSeleccionado.NOMBRE);
 
     if (data) {
@@ -515,7 +520,8 @@ setTimeout(() => {
 
     const { data } = await supabase
       .from("PREGUNTAS")
-      .select();
+.select("*")
+.range(0, 5000)
 
     if (data) {
       setPreguntas(data);
@@ -799,7 +805,75 @@ setTimeout(() => {
       </main>
     );
   }
+if (ejercicioSeleccionado) {
 
+  const bloquesEjercicio = bloques.filter(
+    (b) => b.EJERCICIO === ejercicioSeleccionado
+  );
+
+  return (
+
+    <main className="min-h-screen p-10">
+
+      <button
+        onClick={() =>
+          setEjercicioSeleccionado("")
+        }
+        className="mb-8 rounded-2xl bg-black px-5 py-3 text-white"
+      >
+        ⬅ Volver
+      </button>
+
+      <h1 className="text-5xl font-black mb-10">
+        {ejercicioSeleccionado}
+      </h1>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        {bloquesEjercicio.map((bloque) => (
+
+          <div
+            key={bloque.NOMBRE}
+            className="rounded-3xl bg-white/70 p-8 shadow-xl"
+          >
+
+            <h2 className="text-3xl font-black mb-6">
+              📘 {bloque.NOMBRE}
+            </h2>
+
+            <button
+              onClick={async () => {
+
+                setBloqueSeleccionado(bloque);
+
+                const { data } = await supabase
+                  .from("PREGUNTAS")
+                  .select("*")
+                  .eq("BLOQUE", bloque.NOMBRE);
+
+                if (data) {
+                  setPreguntas(data);
+                }
+
+                setModoTest(true);
+
+              }}
+              className="rounded-2xl bg-black px-6 py-4 text-white font-bold"
+            >
+              ▶️ Empezar test
+            </button>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </main>
+
+  );
+
+}
   return (
     <main className="min-h-screen animate-fade bg-gradient-to-br from-zinc-100 via-slate-200 to-gray-300 dark:from-zinc-900 dark:via-zinc-950 dark:to-black p-10">
       <div className="flex gap-8">
@@ -865,6 +939,32 @@ setTimeout(() => {
       >
         📊 Estadísticas
       </button>
+      <button
+  onClick={() => {
+    setEjercicioSeleccionado("PRIMER EJERCICIO");
+  }}
+  className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+>
+  ✍️ PRIMER EJERCICIO
+</button>
+
+<button
+  onClick={() => {
+    setEjercicioSeleccionado("SEGUNDO EJERCICIO");
+  }}
+  className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+>
+  ✍️ SEGUNDO EJERCICIO
+</button>
+
+<button
+  onClick={() => {
+    setEjercicioSeleccionado("TERCER EJERCICIO");
+  }}
+  className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+>
+  ✍️ TERCER EJERCICIO
+</button>
 
     </div>
 
@@ -1196,7 +1296,8 @@ setTimeout(() => {
             onClick={async () => {
               const { data } = await supabase
                 .from("PREGUNTAS")
-                .select("*");
+.select("*")
+.range(0, 5000)
 
               if (data) {
                 const mezcladas = data.sort(
@@ -1255,7 +1356,8 @@ setTimeout(() => {
 
         const { data } = await supabase
           .from("PREGUNTAS")
-          .select("*")
+.select("*")
+.range(0, 5000)
           .eq("BLOQUE", bloque.NOMBRE);
 
         if (data) {
