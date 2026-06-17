@@ -56,6 +56,8 @@ const [supuestoSeleccionado, setSupuestoSeleccionado] = useState<any>(null);
 
 const [resultadoSupuesto, setResultadoSupuesto] =
   useState<any>(null);
+  const [modoRevisionSupuesto, setModoRevisionSupuesto] =
+  useState(false);
 
 const [mostrarResultadoSupuesto, setMostrarResultadoSupuesto] =
   useState(false);
@@ -889,6 +891,25 @@ setTimeout(() => {
             <p>
               {p.pregunta}
             </p>
+            {modoRevisionSupuesto && (
+
+  <div className="mt-4 rounded-2xl bg-zinc-100 p-4">
+
+    <p className="font-bold">
+      Tu respuesta:
+      {" "}
+      {respuestasSupuesto[p.id] ?? "Sin responder"}
+    </p>
+
+    <p className="font-bold text-green-600">
+      Correcta:
+      {" "}
+      {p.correcta}
+    </p>
+
+  </div>
+
+)}
             
 <div className="grid gap-3 mt-6">
 
@@ -1069,22 +1090,33 @@ setTimeout(() => {
 
       <div className="mt-8 flex gap-4">
 
-        <button
-          className="flex-1 rounded-2xl border p-4 font-bold"
-        >
-          Revisar respuestas
-        </button>
+  <button
+    onClick={() => {
 
-        <button
-          onClick={() =>
-            setMostrarResultadoSupuesto(false)
-          }
-          className="flex-1 rounded-2xl bg-black p-4 font-bold text-white"
-        >
-          Cerrar
-        </button>
+      setMostrarResultadoSupuesto(false);
 
-      </div>
+      setModoRevisionSupuesto(true);
+
+    }}
+    className="flex-1 rounded-2xl border p-4 font-bold"
+  >
+    Revisar respuestas
+  </button>
+
+  <button
+  onClick={() => {
+
+    setMostrarResultadoSupuesto(false);
+    setResultadoSupuesto(null);
+    setSupuestoSeleccionado(null);
+
+  }}
+  className="flex-1 rounded-2xl bg-black p-4 font-bold text-white"
+>
+  Cerrar
+</button>
+
+</div>
 
     </div>
 
@@ -1724,11 +1756,7 @@ if (ejercicioSeleccionado) {
     >
       ▶️ Empezar test
     </button>
-<button
-  className="rounded-2xl bg-black text-white px-8 py-4 font-bold"
->
-  ✅ Corregir supuesto
-</button>
+
   </div>
 
 </div>
