@@ -14,7 +14,8 @@ export default function Home() {
   const [bloqueSeleccionado, setBloqueSeleccionado] = useState<any>(null);
 
   const [preguntas, setPreguntas] = useState<any[]>([]);
-
+const [supuestos, setSupuestos] = useState<any[]>([]);
+const [supuestoSeleccionado, setSupuestoSeleccionado] = useState<any>(null);
   const [pregunta, setPregunta] = useState("");
   const [opcionA, setOpcionA] = useState("");
   const [opcionB, setOpcionB] = useState("");
@@ -24,6 +25,8 @@ export default function Home() {
   const [oficial, setOficial] = useState(false);
   const [preguntasSeleccionadas, setPreguntasSeleccionadas] =
   useState<number[]>([]);
+  const [respuestasSupuesto, setRespuestasSupuesto] =
+  useState<{ [key: number]: number }>({});
 
   const [modoTest, setModoTest] = useState(false);
   const [indicePregunta, setIndicePregunta] = useState(0);
@@ -48,7 +51,16 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [mostrarResultado, setMostrarResultado] =
   useState(false);
-  const datosGrafico = [
+  const [preguntasSupuesto, setPreguntasSupuesto] =
+  useState<any[]>([]);
+
+const [resultadoSupuesto, setResultadoSupuesto] =
+  useState<any>(null);
+
+const [mostrarResultadoSupuesto, setMostrarResultadoSupuesto] =
+  useState(false);
+
+const datosGrafico = [
   { value: 20 },
   { value: 45 },
   { value: 35 },
@@ -111,6 +123,31 @@ async function obtenerTodasPreguntas() {
 }
 
 }
+async function obtenerSupuestos() {
+  const { data } = await supabase
+    .from("SUPUESTOS")
+    .select("*");
+
+  if (data) {
+    setSupuestos(data);
+  }
+}
+
+  async function obtenerPreguntasSupuesto(
+  supuestoId: number
+) {
+
+  const { data } = await supabase
+    .from("PREGUNTAS_SUPUESTO")
+    .select("*")
+    .eq("supuesto_id", supuestoId);
+
+  if (data) {
+    setPreguntasSupuesto(data);
+  }
+
+}
+
   async function guardarPregunta() {
 
   console.log("bloqueSeleccionado", bloqueSeleccionado);
@@ -805,6 +842,321 @@ setTimeout(() => {
       </main>
     );
   }
+  if (supuestoSeleccionado) {
+
+  return (
+
+    <main className="min-h-screen p-10">
+
+      <button
+        onClick={() =>
+          setSupuestoSeleccionado(null)
+        }
+        className="mb-8 rounded-2xl bg-black px-5 py-3 text-white"
+      >
+        ⬅ Volver
+      </button>
+
+      <h1 className="text-5xl font-black mb-8">
+        {supuestoSeleccionado.titulo}
+      </h1>
+
+      <div className="rounded-3xl bg-white p-8 shadow-xl mb-10">
+
+        <h2 className="text-2xl font-bold mb-4">
+          Enunciado
+        </h2>
+
+        <p>
+          {supuestoSeleccionado.enunciado}
+        </p>
+
+      </div>
+
+      <div className="grid gap-6">
+
+        {preguntasSupuesto.map((p, index) => (
+
+          <div
+            key={p.id}
+            className="rounded-3xl bg-white p-8 shadow-xl"
+          >
+
+            <h3 className="text-xl font-black mb-4">
+              Pregunta {index + 1}
+            </h3>
+
+            <p>
+              {p.pregunta}
+            </p>
+            
+<div className="grid gap-3 mt-6">
+
+  <button
+    onClick={() =>
+      setRespuestasSupuesto({
+        ...respuestasSupuesto,
+        [p.id]: 1,
+      })
+    }
+    className={`rounded-2xl border p-4 text-left transition-all
+
+      ${
+        respuestasSupuesto[p.id] === 1
+          ? "bg-blue-500 text-white border-blue-500"
+          : ""
+      }
+
+    `}
+  >
+    A) {p.opcion_a}
+  </button>
+
+  <button
+    onClick={() =>
+      setRespuestasSupuesto({
+        ...respuestasSupuesto,
+        [p.id]: 2,
+      })
+    }
+    className={`rounded-2xl border p-4 text-left transition-all
+
+      ${
+        respuestasSupuesto[p.id] === 2
+          ? "bg-blue-500 text-white border-blue-500"
+          : ""
+      }
+
+    `}
+  >
+    B) {p.opcion_b}
+  </button>
+
+  <button
+    onClick={() =>
+      setRespuestasSupuesto({
+        ...respuestasSupuesto,
+        [p.id]: 3,
+      })
+    }
+    className={`rounded-2xl border p-4 text-left transition-all
+
+      ${
+        respuestasSupuesto[p.id] === 3
+          ? "bg-blue-500 text-white border-blue-500"
+          : ""
+      }
+
+    `}
+  >
+    C) {p.opcion_c}
+  </button>
+
+  <button
+    onClick={() =>
+      setRespuestasSupuesto({
+        ...respuestasSupuesto,
+        [p.id]: 4,
+      })
+    }
+    className={`rounded-2xl border p-4 text-left transition-all
+
+      ${
+        respuestasSupuesto[p.id] === 4
+          ? "bg-blue-500 text-white border-blue-500"
+          : ""
+      }
+
+    `}
+  >
+    D) {p.opcion_d}
+  </button>
+
+</div>
+
+          </div>
+
+        ))}
+
+      </div>
+<div className="mt-10 flex justify-center">
+
+  <button
+    onClick={() => {
+
+      let aciertos = 0;
+      let fallos = 0;
+      let blancos = 0;
+
+      preguntasSupuesto.forEach((p) => {
+
+        const respuesta =
+          respuestasSupuesto[p.id];
+
+        if (respuesta === undefined) {
+          blancos++;
+        } else if (respuesta === p.correcta) {
+          aciertos++;
+        } else {
+          fallos++;
+        }
+
+      });
+
+      const nota =
+        aciertos - fallos * 0.25;
+
+      console.log({
+        aciertos,
+        fallos,
+        blancos,
+        nota,
+      });
+
+      setResultadoSupuesto({
+        aciertos,
+        fallos,
+        blancos,
+        nota,
+      });
+      setMostrarResultadoSupuesto(true);
+
+    }}
+    className="rounded-2xl bg-black px-8 py-5 text-white font-bold text-lg"
+  >
+    ✅ Corregir supuesto
+  </button>
+
+</div>
+{mostrarResultadoSupuesto &&
+ resultadoSupuesto && (
+
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+    <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+
+      <h2 className="mb-8 text-center text-4xl font-black">
+        🎉 Resultado
+      </h2>
+
+      <div className="space-y-4 text-xl">
+
+        <div>
+          ✅ Aciertos: {resultadoSupuesto.aciertos}
+        </div>
+
+        <div>
+          ❌ Fallos: {resultadoSupuesto.fallos}
+        </div>
+
+        <div>
+          ⚪ Blancos: {resultadoSupuesto.blancos}
+        </div>
+
+        <div className="font-black text-2xl">
+          📈 Nota: {resultadoSupuesto.nota}
+        </div>
+
+        <div className="text-2xl font-black">
+
+          {resultadoSupuesto.nota >= 10
+            ? "🟢 APTO"
+            : "🔴 NO APTO"}
+
+        </div>
+
+      </div>
+
+      <div className="mt-8 flex gap-4">
+
+        <button
+          className="flex-1 rounded-2xl border p-4 font-bold"
+        >
+          Revisar respuestas
+        </button>
+
+        <button
+          onClick={() =>
+            setMostrarResultadoSupuesto(false)
+          }
+          className="flex-1 rounded-2xl bg-black p-4 font-bold text-white"
+        >
+          Cerrar
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+)}
+    </main>
+
+  );
+
+}
+  if (ejercicioSeleccionado === "SEGUNDO EJERCICIO") {
+
+  return (
+    <main className="min-h-screen p-10">
+
+      <button
+        onClick={() =>
+          setEjercicioSeleccionado("")
+        }
+        className="mb-8 rounded-2xl bg-black px-5 py-3 text-white"
+      >
+        ⬅ Volver
+      </button>
+
+      <h1 className="text-5xl font-black mb-10">
+        ✍️ Segundo ejercicio
+      </h1>
+
+      <div className="grid gap-6">
+
+        {supuestos.map((supuesto) => (
+
+          <div
+            key={supuesto.id}
+            className="rounded-3xl bg-white p-8 shadow-xl"
+          >
+
+            <h2 className="text-3xl font-black mb-4">
+              📄 {supuesto.titulo}
+            </h2>
+
+            <p className="text-gray-600 mb-6">
+              {supuesto.enunciado.slice(0, 200)}...
+            </p>
+
+            <button
+              onClick={async () => {
+
+  setSupuestoSeleccionado(
+    supuesto
+  );
+
+  await obtenerPreguntasSupuesto(
+    supuesto.id
+  );
+
+}}
+              className="rounded-2xl bg-black px-6 py-4 text-white font-bold"
+            >
+              Abrir supuesto
+            </button>
+
+          </div>
+
+        ))}
+
+      </div>
+
+    </main>
+  );
+}
 if (ejercicioSeleccionado) {
 
   const bloquesEjercicio = bloques.filter(
@@ -949,7 +1301,8 @@ if (ejercicioSeleccionado) {
 </button>
 
 <button
-  onClick={() => {
+  onClick={async () => {
+    await obtenerSupuestos();
     setEjercicioSeleccionado("SEGUNDO EJERCICIO");
   }}
   className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
@@ -1371,7 +1724,11 @@ if (ejercicioSeleccionado) {
     >
       ▶️ Empezar test
     </button>
-
+<button
+  className="rounded-2xl bg-black text-white px-8 py-4 font-bold"
+>
+  ✅ Corregir supuesto
+</button>
   </div>
 
 </div>
