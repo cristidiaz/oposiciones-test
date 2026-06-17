@@ -948,13 +948,19 @@ setTimeout(() => {
     }
     className={`rounded-2xl border p-4 text-left transition-all
 
-      ${
-        respuestasSupuesto[p.id] === 1
-          ? "bg-blue-500 text-white border-blue-500"
-          : ""
-      }
+${
+  modoRevisionSupuesto
+    ? p.correcta === 1
+      ? "bg-green-500 text-white border-green-500"
+      : respuestasSupuesto[p.id] === 1
+      ? "bg-red-500 text-white border-red-500"
+      : ""
+    : respuestasSupuesto[p.id] === 1
+    ? "bg-blue-500 text-white border-blue-500"
+    : ""
+}
 
-    `}
+`}
   >
     A) {p.opcion_a}
   </button>
@@ -968,13 +974,19 @@ setTimeout(() => {
     }
     className={`rounded-2xl border p-4 text-left transition-all
 
-      ${
-        respuestasSupuesto[p.id] === 2
-          ? "bg-blue-500 text-white border-blue-500"
-          : ""
-      }
+${
+  modoRevisionSupuesto
+    ? p.correcta === 2
+      ? "bg-green-500 text-white border-green-500"
+      : respuestasSupuesto[p.id] === 2
+      ? "bg-red-500 text-white border-red-500"
+      : ""
+    : respuestasSupuesto[p.id] === 2
+    ? "bg-blue-500 text-white border-blue-500"
+    : ""
+}
 
-    `}
+`}
   >
     B) {p.opcion_b}
   </button>
@@ -988,13 +1000,19 @@ setTimeout(() => {
     }
     className={`rounded-2xl border p-4 text-left transition-all
 
-      ${
-        respuestasSupuesto[p.id] === 3
-          ? "bg-blue-500 text-white border-blue-500"
-          : ""
-      }
+${
+  modoRevisionSupuesto
+    ? p.correcta === 3
+      ? "bg-green-500 text-white border-green-500"
+      : respuestasSupuesto[p.id] === 3
+      ? "bg-red-500 text-white border-red-500"
+      : ""
+    : respuestasSupuesto[p.id] === 3
+    ? "bg-blue-500 text-white border-blue-500"
+    : ""
+}
 
-    `}
+`}
   >
     C) {p.opcion_c}
   </button>
@@ -1008,13 +1026,19 @@ setTimeout(() => {
     }
     className={`rounded-2xl border p-4 text-left transition-all
 
-      ${
-        respuestasSupuesto[p.id] === 4
-          ? "bg-blue-500 text-white border-blue-500"
-          : ""
-      }
+${
+  modoRevisionSupuesto
+    ? p.correcta === 4
+      ? "bg-green-500 text-white border-green-500"
+      : respuestasSupuesto[p.id] === 4
+      ? "bg-red-500 text-white border-red-500"
+      : ""
+    : respuestasSupuesto[p.id] === 4
+    ? "bg-blue-500 text-white border-blue-500"
+    : ""
+}
 
-    `}
+`}
   >
     D) {p.opcion_d}
   </button>
