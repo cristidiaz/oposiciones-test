@@ -893,18 +893,44 @@ setTimeout(() => {
             </p>
             {modoRevisionSupuesto && (
 
-  <div className="mt-4 rounded-2xl bg-zinc-100 p-4">
+  <div className="mt-4 rounded-2xl bg-zinc-100 p-4 space-y-3">
 
-    <p className="font-bold">
-      Tu respuesta:
-      {" "}
-      {respuestasSupuesto[p.id] ?? "Sin responder"}
-    </p>
+    <p
+  className={`font-bold ${
+    respuestasSupuesto[p.id] === p.correcta
+      ? "text-green-600"
+      : "text-red-600"
+  }`}
+>
+  {respuestasSupuesto[p.id] === p.correcta ? "✅" : "❌"} Tu respuesta:
+
+  {" "}
+
+  {respuestasSupuesto[p.id] === 1
+    ? `A) ${p.opcion_a}`
+    : respuestasSupuesto[p.id] === 2
+    ? `B) ${p.opcion_b}`
+    : respuestasSupuesto[p.id] === 3
+    ? `C) ${p.opcion_c}`
+    : respuestasSupuesto[p.id] === 4
+    ? `D) ${p.opcion_d}`
+    : "Sin responder"}
+</p>
 
     <p className="font-bold text-green-600">
-      Correcta:
+
+      ✅ Correcta:
+
       {" "}
-      {p.correcta}
+
+      {p.correcta === 1
+        ? `A) ${p.opcion_a}`
+        : p.correcta === 2
+        ? `B) ${p.opcion_b}`
+        : p.correcta === 3
+        ? `C) ${p.opcion_c}`
+        : `D) ${p.opcion_d}`}
+
     </p>
 
   </div>
