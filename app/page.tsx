@@ -2038,6 +2038,7 @@ setIndicePregunta(0);
     </ResponsiveContainer>
 
   </div>
+  </div>
 
         <div className="grid md:grid-cols-3 gap-6 mb-10">
 
@@ -2142,81 +2143,14 @@ setIndicePregunta(0);
   📊 Ver estadísticas
 </button>
 
-  </div>
-
           </div>
 
-        </div>
+      </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {bloques.map((bloque) => (
-            <div
-  key={bloque.NOMBRE}
-  className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.15)] hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500"
->
-
-  <div className="absolute inset-0 bg-gradient-to-br from-zinc-500/0 to-black/0 group-hover:from-zinc-500/5 group-hover:to-black/10 transition-all duration-500" />
-
-  <div className="relative z-10">
-
-    <div className="text-6xl mb-6">
-      📘
-    </div>
-
-    <h2
-      onClick={() => setBloqueSeleccionado(bloque)}
-      className="text-3xl font-black mb-4 cursor-pointer"
-    >
-      {bloque.NOMBRE}
-    </h2>
-
-    <p className="text-zinc-600 dark:text-zinc-400 mb-8 leading-relaxed">
-      Practica preguntas oficiales y mejora tu rendimiento.
-    </p>
-
-    <button
-      onClick={async () => {
-
-        setBloqueSeleccionado(bloque);
-
-        const { data } = await supabase
-  .from("PREGUNTAS")
-  .select("*")
-  .range(0, 5000)
-          .eq("BLOQUE", bloque.NOMBRE);
-
-        if (data) {
-
-  const mezcladas = data.sort(
-    () => Math.random() - 0.5
-  );
-
-  setPreguntas(
-    mezcladas.slice(
-      0,
-      numeroPreguntas
-    )
-  );
-
-}
-
-        setModoTest(true);
-
-      }}
-      className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
-    >
-      ▶️ Empezar test
-    </button>
-
-  </div>
-
-</div>
-          ))}
-              </div>
     </div>
 
   </div>
-  
+
 </main>
   );
 }
