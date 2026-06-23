@@ -22,6 +22,10 @@ const [supuestoSeleccionado, setSupuestoSeleccionado] = useState<any>(null);
   const [opcionC, setOpcionC] = useState("");
   const [opcionD, setOpcionD] = useState("");
   const [correcta, setCorrecta] = useState("0");
+  const [verEstadisticas, setVerEstadisticas] =
+  useState(false);
+  const [verSimulacro, setVerSimulacro] =
+  useState(false);
   const [oficial, setOficial] = useState(false);
   const [preguntasSeleccionadas, setPreguntasSeleccionadas] =
   useState<number[]>([]);
@@ -36,6 +40,10 @@ const [supuestoSeleccionado, setSupuestoSeleccionado] = useState<any>(null);
 
   const [feedback, setFeedback] = useState("");
   const [toast, setToast] = useState("");
+  const [numeroPreguntas, setNumeroPreguntas] =
+  useState(20);
+  const [bloquesSimulacro, setBloquesSimulacro] =
+  useState<string[]>([]);
 
   const [verBaseDatos, setVerBaseDatos] = useState(false);
 
@@ -46,6 +54,14 @@ const [supuestoSeleccionado, setSupuestoSeleccionado] = useState<any>(null);
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<number | null>(null);
   const [seccionActiva, setSeccionActiva] =
   useState("inicio");
+  const [estadisticasSupuestos, setEstadisticasSupuestos] =
+  useState({
+    realizados: 0,
+    aptos: 0,
+    noAptos: 0,
+    mejorNota: 0,
+    media: 0,
+  });
   const [ejercicioSeleccionado, setEjercicioSeleccionado] =
   useState("");
   const [darkMode, setDarkMode] = useState(false);
@@ -258,19 +274,56 @@ setTimeout(() => {
     setModoTest(true);
   }
 
-  function responder(opcion: number) {
+ async function responder(opcion: number) {
     const actual = preguntas[indicePregunta];
 
     if (!actual) return;
     setRespuestaSeleccionada(opcion);
+if (opcion === actual.correcta) {
 
-    if (opcion === actual.correcta) {
-      setAciertos((prev) => prev + 1);
-      setFeedback("✅ Correcta");
-    } else {
-      setFallos((prev) => prev + 1);
-      setFeedback("❌ Incorrecta");
-    }
+  setAciertos((prev) => prev + 1);
+
+  setFeedback("✅ Correcta");
+
+  if (
+    bloqueSeleccionado?.NOMBRE === "FALLOS"
+  ) {
+
+    await supabase
+      .from("FALLOS")
+      .delete()
+      .eq("id", actual.id);
+
+  }
+
+}
+     else {
+
+  setFallos((prev) => prev + 1);
+
+  setFeedback("❌ Incorrecta");
+
+  if (
+    bloqueSeleccionado?.NOMBRE !== "FALLOS"
+  ) {
+
+    await supabase
+      .from("FALLOS")
+      .insert([
+        {
+          BLOQUE: actual.BLOQUE,
+          pregunta: actual.pregunta,
+          opcion_a: actual.opcion_a,
+          opcion_b: actual.opcion_b,
+          opcion_c: actual.opcion_c,
+          opcion_d: actual.opcion_d,
+          correcta: actual.correcta,
+        },
+      ]);
+
+  }
+
+}
 
     setTimeout(() => {
       setFeedback("");
@@ -1090,6 +1143,40 @@ ${
         blancos,
         nota,
       });
+      setEstadisticasSupuestos((prev) => {
+
+  const realizados =
+    prev.realizados + 1;
+
+  const aptos =
+    nota >= 10
+      ? prev.aptos + 1
+      : prev.aptos;
+
+  const noAptos =
+    nota < 10
+      ? prev.noAptos + 1
+      : prev.noAptos;
+
+  const mejorNota =
+    Math.max(prev.mejorNota, nota);
+
+  const media =
+    (
+      prev.media *
+      prev.realizados +
+      nota
+    ) / realizados;
+
+  return {
+    realizados,
+    aptos,
+    noAptos,
+    mejorNota,
+    media,
+  };
+
+});
       setMostrarResultadoSupuesto(true);
 
     }}
@@ -1239,6 +1326,330 @@ ${
     </main>
   );
 }
+if (verEstadisticas) {
+
+  return (
+
+    <main className="min-h-screen p-10">
+
+      <button
+        onClick={() =>
+          setVerEstadisticas(false)
+        }
+        className="mb-8 rounded-2xl bg-black px-5 py-3 text-white"
+      >
+        ⬅ Volver
+      </button>
+
+      <h1 className="text-5xl font-black mb-10">
+        📊 Estadísticas
+      </h1>
+
+      <div className="grid gap-6">
+
+        <div className="rounded-3xl bg-white p-8 shadow-xl">
+
+          <h2 className="text-3xl font-black mb-6">
+            📘 Tests
+          </h2>
+
+          <div className="grid grid-cols-3 gap-4">
+
+  <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Aciertos
+    </p>
+
+    <p className="text-4xl font-black">
+      {aciertos}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Fallos
+    </p>
+
+    <p className="text-4xl font-black">
+      {fallos}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Ratio
+    </p>
+
+    <p className="text-4xl font-black">
+      {aciertos + fallos > 0
+        ? Math.round(
+            (aciertos /
+              (aciertos + fallos)) *
+              100
+          )
+        : 0}
+      %
+    </p>
+
+  </div>
+
+</div>
+
+        </div>
+
+        <div className="rounded-3xl bg-white p-8 shadow-xl">
+
+          <h2 className="text-3xl font-black mb-6">
+            ✍️ Supuestos
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-4">
+
+  <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Realizados
+    </p>
+
+    <p className="text-4xl font-black">
+      {estadisticasSupuestos.realizados}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-yellow-500/10 border border-yellow-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Mejor nota
+    </p>
+
+    <p className="text-4xl font-black">
+      {estadisticasSupuestos.mejorNota.toFixed(2)}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-cyan-500/10 border border-cyan-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Nota media
+    </p>
+
+    <p className="text-4xl font-black">
+      {estadisticasSupuestos.media.toFixed(2)}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      Aptos
+    </p>
+
+    <p className="text-4xl font-black">
+      {estadisticasSupuestos.aptos}
+    </p>
+
+  </div>
+
+  <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-6 text-center">
+
+    <p className="text-sm font-bold text-zinc-500 mb-2">
+      No aptos
+    </p>
+
+    <p className="text-4xl font-black">
+      {estadisticasSupuestos.noAptos}
+    </p>
+
+  </div>
+
+</div>
+
+        </div>
+
+      </div>
+
+    </main>
+
+  );
+
+}
+if (verSimulacro) {
+
+  return (
+
+    <main className="min-h-screen p-10">
+
+      <button
+        onClick={() =>
+          setVerSimulacro(false)
+        }
+        className="mb-8 rounded-2xl bg-black px-5 py-3 text-white"
+      >
+        ⬅ Volver
+      </button>
+
+      <h1 className="text-5xl font-black mb-10">
+        🎲 Simulacro
+      </h1>
+
+      <div className="rounded-3xl bg-white p-8 shadow-xl">
+
+        <p className="mb-4 font-bold">
+          Número de preguntas
+        </p>
+
+        <div className="flex gap-2 mb-6">
+
+          {[25, 50, 100].map((num) => (
+
+            <button
+              key={num}
+              onClick={() =>
+                setNumeroPreguntas(num)
+              }
+              className={`rounded-xl px-4 py-2 font-bold border
+
+                ${
+                  numeroPreguntas === num
+                    ? "bg-black text-white"
+                    : "bg-white"
+                }
+
+              `}
+            >
+              {num}
+            </button>
+
+          ))}
+
+          <button
+            onClick={() =>
+              setNumeroPreguntas(9999)
+            }
+            className={`rounded-xl px-4 py-2 font-bold border
+
+              ${
+                numeroPreguntas === 9999
+                  ? "bg-black text-white"
+                  : "bg-white"
+              }
+
+            `}
+          >
+            Todas
+          </button>
+
+        </div>
+
+        <p className="mb-4 font-bold">
+          Bloques incluidos
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-2 mb-8">
+
+          {bloques.map((bloque) => (
+
+            <label
+              key={bloque.NOMBRE}
+              className="flex items-center gap-3 rounded-xl border p-3 cursor-pointer"
+            >
+
+              <input
+                type="checkbox"
+                checked={bloquesSimulacro.includes(
+                  bloque.NOMBRE
+                )}
+                onChange={(e) => {
+
+                  if (e.target.checked) {
+
+                    setBloquesSimulacro([
+                      ...bloquesSimulacro,
+                      bloque.NOMBRE,
+                    ]);
+
+                  } else {
+
+                    setBloquesSimulacro(
+                      bloquesSimulacro.filter(
+                        (b) =>
+                          b !== bloque.NOMBRE
+                      )
+                    );
+
+                  }
+
+                }}
+              />
+
+              {bloque.NOMBRE}
+
+            </label>
+
+          ))}
+
+        </div>
+
+        <button
+          onClick={async () => {
+
+            const { data } = await supabase
+              .from("PREGUNTAS")
+              .select("*")
+              .in(
+                "BLOQUE",
+                bloquesSimulacro.length > 0
+                  ? bloquesSimulacro
+                  : bloques.map(
+                      (b) => b.NOMBRE
+                    )
+              )
+              .range(0, 5000);
+
+            if (data) {
+
+              const mezcladas = data.sort(
+                () => Math.random() - 0.5
+              );
+
+              setPreguntas(
+                mezcladas.slice(
+                  0,
+                  numeroPreguntas
+                )
+              );
+
+              setBloqueSeleccionado({
+                NOMBRE: "SIMULACRO",
+              });
+
+              setIndicePregunta(0);
+
+              setModoTest(true);
+
+            }
+
+          }}
+          className="rounded-2xl bg-black px-8 py-5 text-white font-bold"
+        >
+          🚀 Empezar simulacro
+        </button>
+
+      </div>
+
+    </main>
+
+  );
+
+}
 if (ejercicioSeleccionado) {
 
   const bloquesEjercicio = bloques.filter(
@@ -1274,7 +1685,48 @@ if (ejercicioSeleccionado) {
             <h2 className="text-3xl font-black mb-6">
               📘 {bloque.NOMBRE}
             </h2>
+<div className="flex gap-2 mb-6">
 
+  {[10, 20, 50].map((num) => (
+
+    <button
+      key={num}
+      onClick={() =>
+        setNumeroPreguntas(num)
+      }
+      className={`rounded-xl px-4 py-2 font-bold border
+
+        ${
+          numeroPreguntas === num
+            ? "bg-black text-white"
+            : "bg-white"
+        }
+
+      `}
+    >
+      {num}
+    </button>
+
+  ))}
+
+  <button
+    onClick={() =>
+      setNumeroPreguntas(9999)
+    }
+    className={`rounded-xl px-4 py-2 font-bold border
+
+      ${
+        numeroPreguntas === 9999
+          ? "bg-black text-white"
+          : "bg-white"
+      }
+
+    `}
+  >
+    Todas
+  </button>
+
+</div>
             <button
               onClick={async () => {
 
@@ -1284,11 +1736,26 @@ if (ejercicioSeleccionado) {
                   .from("PREGUNTAS")
                   .select("*")
                   .eq("BLOQUE", bloque.NOMBRE);
+                  console.log(
+  bloque.NOMBRE,
+  data?.length
+);
 
                 if (data) {
-                  setPreguntas(data);
-                }
 
+  const mezcladas = data.sort(
+    () => Math.random() - 0.5
+  );
+
+  setPreguntas(
+    mezcladas.slice(
+      0,
+      numeroPreguntas
+    )
+  );
+
+}
+setIndicePregunta(0);
                 setModoTest(true);
 
               }}
@@ -1369,11 +1836,18 @@ if (ejercicioSeleccionado) {
       </button>
 
       <button
+       onClick={() => setVerEstadisticas(true)}
         className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
       >
-        📊 Estadísticas
-      </button>
-      <button
+  📊 Estadísticas
+</button>
+<button
+  onClick={() => setVerSimulacro(true)}
+  className="w-full rounded-2xl px-5 py-4 text-left font-bold hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+>
+  🎲 Simulacro
+</button>
+<button
   onClick={() => {
     setEjercicioSeleccionado("PRIMER EJERCICIO");
   }}
@@ -1421,16 +1895,6 @@ if (ejercicioSeleccionado) {
           <div className="flex justify-end mb-10">
 
   <div className="relative w-[380px]">
-
-    <input
-      type="text"
-      placeholder="Buscar..."
-      className="w-full rounded-2xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 pl-14 pr-6 py-4 text-lg shadow-[0_20px_60px_rgba(0,0,0,0.12)] outline-none focus:scale-[1.02] transition-all duration-300"
-    />
-
-    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400">
-      🔎
-    </div>
 
   </div>
 
@@ -1505,6 +1969,30 @@ if (ejercicioSeleccionado) {
   </div>
 
 </div>
+
+</div>
+
+<div className="mb-16">
+
+  <h1 className="text-7xl md:text-8xl font-black leading-none mb-6 bg-gradient-to-r from-black to-zinc-500 dark:from-white dark:to-zinc-500 bg-clip-text text-transparent">
+
+    Oposiciones
+    <br />
+    Justicia
+
+
+  </h1>
+
+  <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+
+
+    Practica test oficiales, simulacros y seguimiento de progreso
+    en una plataforma moderna diseñada para opositores.
+
+  </p>
+
+</div>
+
 <div className="rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] mb-14">
 
   <div className="flex items-center justify-between mb-8">
@@ -1551,29 +2039,6 @@ if (ejercicioSeleccionado) {
 
   </div>
 
-</div>
-
-<div className="mb-16">
-
-  <h1 className="text-7xl md:text-8xl font-black leading-none mb-6 bg-gradient-to-r from-black to-zinc-500 dark:from-white dark:to-zinc-500 bg-clip-text text-transparent">
-
-    Oposiciones
-    <br />
-    Justicia
-
-
-  </h1>
-
-  <p className="text-xl text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
-
-
-    Practica test oficiales, simulacros y seguimiento de progreso
-    en una plataforma moderna diseñada para opositores.
-
-  </p>
-
-</div>
-
         <div className="grid md:grid-cols-3 gap-6 mb-10">
 
           <div
@@ -1596,7 +2061,12 @@ if (ejercicioSeleccionado) {
     <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
       Gestiona preguntas, edita contenido y administra bloques.
     </p>
-
+<button
+  onClick={() => setVerBaseDatos(true)}
+  className="mt-8 rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+>
+  🗄️ Abrir base de datos
+</button>
   </div>
 
 </div>
@@ -1644,118 +2114,38 @@ if (ejercicioSeleccionado) {
 
 </div>
 
-          <div className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500">
-
+          <div
+  onClick={() => setVerEstadisticas(true)}
+  className="group relative overflow-hidden rounded-[32px] bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-[0_20px_60px_rgba(0,0,0,0.12)] cursor-pointer hover:scale-[1.03] hover:-translate-y-2 transition-all duration-500"
+>
   <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-violet-500/0 group-hover:from-blue-500/10 group-hover:to-violet-500/20 transition-all duration-500" />
 
   <div className="relative z-10">
 
     <div className="text-6xl mb-6">
-      📊
-    </div>
+  📊
+</div>
 
-    <h2 className="text-3xl font-black mb-8">
-      Estadísticas
-    </h2>
+<h2 className="text-3xl font-black mb-3">
+  Estadísticas
+</h2>
 
-    <div className="grid grid-cols-3 gap-4">
+<p className="mb-8 text-zinc-600 dark:text-zinc-400 leading-relaxed">
+  Consulta tu progreso, resultados y evolución
+  en tests y supuestos.
+</p>
 
-      <div className="rounded-2xl bg-green-500/10 border border-green-500/20 p-4 text-center">
-
-        <p className="text-sm font-bold mb-2 text-zinc-500">
-          Aciertos
-        </p>
-
-        <p className="text-3xl font-black">
-          {aciertos}
-        </p>
-
-      </div>
-
-      <div className="rounded-2xl bg-red-500/10 border border-red-500/20 p-4 text-center">
-
-        <p className="text-sm font-bold mb-2 text-zinc-500">
-          Fallos
-        </p>
-
-        <p className="text-3xl font-black">
-          {fallos}
-        </p>
-
-      </div>
-
-      <div className="rounded-2xl bg-blue-500/10 border border-blue-500/20 p-4 text-center">
-
-        <p className="text-sm font-bold mb-2 text-zinc-500">
-          Ratio
-        </p>
-
-        <p className="text-3xl font-black">
-          {aciertos + fallos > 0
-            ? Math.round(
-                (aciertos /
-                  (aciertos + fallos)) *
-                  100
-              )
-            : 0}
-          %
-        </p>
-
-      </div>
-
-    </div>
+<button
+  onClick={() => setVerEstadisticas(true)}
+  className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-6 py-4 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all duration-300"
+>
+  📊 Ver estadísticas
+</button>
 
   </div>
 
           </div>
 
-        </div>
-
-        <div className="rounded-3xl bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl border border-white/50 p-8 shadow-xl mb-10">
-          <h2 className="text-3xl font-black mb-6">
-            🎲 Simulacro
-          </h2>
-
-          <p className="mb-4">
-            Número de preguntas
-          </p>
-
-          <input
-            type="number"
-            value={10}
-            readOnly
-            className="rounded-2xl border p-5 mb-6 w-40"
-          />
-
-          <button
-            onClick={async () => {
-              const { data } = await supabase
-                .from("PREGUNTAS")
-.select("*")
-.range(0, 5000)
-
-              if (data) {
-                const mezcladas = data.sort(
-                  () => Math.random() - 0.5
-                );
-
-                setPreguntas(
-                  mezcladas.slice(0, 10)
-                );
-
-                setBloqueSeleccionado({
-                  NOMBRE: "SIMULACRO",
-                });
-
-                setIndicePregunta(0);
-
-                setModoTest(true);
-              }
-            }}
-            className="rounded-2xl bg-gradient-to-br from-black to-zinc-800 px-8 py-5 text-white font-bold"
-          >
-            🚀 Empezar simulacro
-          </button>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1790,14 +2180,25 @@ if (ejercicioSeleccionado) {
         setBloqueSeleccionado(bloque);
 
         const { data } = await supabase
-          .from("PREGUNTAS")
-.select("*")
-.range(0, 5000)
+  .from("PREGUNTAS")
+  .select("*")
+  .range(0, 5000)
           .eq("BLOQUE", bloque.NOMBRE);
 
         if (data) {
-          setPreguntas(data);
-        }
+
+  const mezcladas = data.sort(
+    () => Math.random() - 0.5
+  );
+
+  setPreguntas(
+    mezcladas.slice(
+      0,
+      numeroPreguntas
+    )
+  );
+
+}
 
         setModoTest(true);
 
@@ -1815,8 +2216,7 @@ if (ejercicioSeleccionado) {
     </div>
 
   </div>
-
+  
 </main>
   );
 }
-
